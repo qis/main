@@ -1,0 +1,18 @@
+# Hidden Files
+.*
+!.clang-format
+!.clang-tidy
+!.gitattributes
+!.gitignore
+
+# Build Files
+/build/
+
+# Install Files
+/bin/
+/res/tzdata/
+
+# Application
+/*.core
+/*.log
+/core
