@@ -1,3 +1,4 @@
+#include <config.h>
 #include <ice/async.h>
 #include <ice/net/tcp/socket.h>
 #include <ice/scope.h>
@@ -60,7 +61,7 @@ ice::task server(ice::context& context) {
   socket.set(ice::net::option::reuse_address(true));
   socket.bind(endpoint);
   socket.listen();
-  std::cout << "listening" << std::endl;
+  std::cout << PROJECT << ' ' << VERSION << ' ' << COMPANY << ' ' << COPYING << std::endl;
   while (true) {
     handle(co_await socket.accept());
   }

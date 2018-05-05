@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.11.2 FATAL_ERROR)
 project(main VERSION 0.1.0 LANGUAGES CXX)
 
+set(PROJECT "Main")
+set(COMPANY "Xiphos")
+set(COPYING "2018 Alexej Harm")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -26,8 +30,18 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER build)
 file(GLOB_RECURSE sources src/*.h src/*.cpp)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX src FILES ${sources})
 
+configure_file(res/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+source_group("res" FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+list(APPEND sources ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
+if(MSVC)
+  file(GLOB res res/resource.h res/resource.rc res/resource.manifest)
+  source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/res PREFIX res FILES ${res})
+  list(APPEND sources ${res})
+endif()
+
 add_executable(${PROJECT_NAME} ${sources})
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} res src)
 
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
