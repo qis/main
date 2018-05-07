@@ -34,7 +34,7 @@ configure_file(res/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 source_group("res" FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 list(APPEND sources ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
-if(MSVC)
+if(WIN32)
   file(GLOB res res/resource.h res/resource.rc res/resource.manifest)
   source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/res PREFIX res FILES ${res})
   list(APPEND sources ${res})
