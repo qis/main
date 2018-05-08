@@ -63,13 +63,13 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 
 if(WIN32 AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/windowsZones.xml)
   file(DOWNLOAD "https://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml"
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/windowsZones.xml TLS_VERIFY ON)
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/windowsZones.xml)
 endif()
 
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/version)
   if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/tzdata/tzdata.tar.gz)
     file(DOWNLOAD "https://data.iana.org/time-zones/releases/tzdata2018e.tar.gz"
-      ${CMAKE_CURRENT_BINARY_DIR}/tzdata/tzdata.tar.gz TLS_VERIFY ON)
+      ${CMAKE_CURRENT_BINARY_DIR}/tzdata/tzdata.tar.gz)
   endif()
   execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf tzdata.tar.gz
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tzdata)
