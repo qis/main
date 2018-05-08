@@ -1,3 +1,4 @@
+#if 0
 #include <config.h>
 #include <ice/async.h>
 #include <ice/net/tcp/socket.h>
@@ -77,4 +78,23 @@ int main() {
   catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
   }
+}
+#endif
+
+#include <date/tz.h>
+#include <chrono>
+#include <filesystem>
+#include <iostream>
+
+int main() {
+  auto path = std::filesystem::current_path();
+  while (true) {
+    if (std::filesystem::is_directory(path / "res" / "tzdata") || path == path.parent_path()) {
+      break;
+    }
+    path = path.parent_path();
+  }
+  date::set_install((path / "res" / "tzdata").u8string());
+  const auto time = date::make_zoned(date::locate_zone("Europe/Berlin"), std::chrono::system_clock::now());
+  std::cout << time << std::endl;
 }

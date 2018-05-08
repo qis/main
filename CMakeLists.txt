@@ -43,13 +43,38 @@ endif()
 add_executable(${PROJECT_NAME} ${sources})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} res src)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_link_libraries(${PROJECT_NAME} PRIVATE c++experimental)
+endif()
+
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 
 find_package(ice 0.1.0 REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} PRIVATE ice::ice)
 
+find_package(date REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE date::date date::tz)
+
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+
+if(WIN32 AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/windowsZones.xml)
+  file(DOWNLOAD "https://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml"
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/windowsZones.xml TLS_VERIFY ON)
+endif()
+
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/version)
+  if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/tzdata/tzdata.tar.gz)
+    file(DOWNLOAD "https://data.iana.org/time-zones/releases/tzdata2018e.tar.gz"
+      ${CMAKE_CURRENT_BINARY_DIR}/tzdata/tzdata.tar.gz TLS_VERIFY ON)
+  endif()
+  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf tzdata.tar.gz
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tzdata)
+  foreach(name africa antarctica asia australasia backward etcetera
+      europe leapseconds northamerica pacificnew southamerica systemv version)
+    file(COPY ${CMAKE_CURRENT_BINARY_DIR}/tzdata/${name} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata)
+  endforeach()
+endif()
