@@ -180,10 +180,19 @@ auto handle_request(
   return send(std::move(res));
 }
 
+template <class Stream, class Message>
+awaitable<bool> write_message(Stream& stream, Message msg) {
+  co_await http::async_write(stream, msg, co_await this_coro::token());
+  co_return msg.need_eof();
+}
+
 awaitable<void> session(tcp::socket socket, std::shared_ptr<std::string const> doc_root) {
   boost::system::error_code ec;
   boost::beast::flat_buffer buffer;
   http::request<http::string_body> req;
+
+  // Get executor
+  auto executor = co_await this_coro::executor();
 
   // Get token and redirect error
   auto token = redirect_error(co_await this_coro::token(), ec);
@@ -203,25 +212,12 @@ awaitable<void> session(tcp::socket socket, std::shared_ptr<std::string const> d
     if (ec)
       co_return fail(ec, "read");
 
-    auto close = false;
-    std::shared_ptr<void> msg_storage;
-    std::optional<awaitable<std::size_t>> send_lambda;
+    std::optional<awaitable<bool>> send;
+    handle_request(*doc_root, std::move(req), [&](auto&& msg) {
+      send.emplace(write_message(socket, std::move(msg)));
+    });
 
-    auto const send = [&](auto msg) {
-      auto sp = std::make_shared<decltype(msg)>(std::move(msg));
-      msg_storage = sp;
-      send_lambda.emplace(http::async_write(socket, *sp, token));
-
-      // Determine if we should close the connection after
-      close = msg.need_eof();
-    };
-
-    // Handle request
-    handle_request(*doc_root, std::move(req), send);
-    co_await* send_lambda;
-    msg_storage = nullptr;
-
-    if (close) {
+    if (co_await *send) {
       // This means we should close the connection, usually because
       // the response indicated the "Connection: close" semantic.
       break;
