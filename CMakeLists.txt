@@ -18,7 +18,7 @@ if(WIN32)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  string(APPEND CMAKE_CXX_FLAGS " /utf-8 /await")
+  string(APPEND CMAKE_CXX_FLAGS " /await")
   foreach(config RELEASE RELWITHDEBINFO MINSIZEREL)
     string(APPEND CMAKE_CXX_FLAGS_${config} " /await:heapelide")
   endforeach()
