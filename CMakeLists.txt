@@ -50,28 +50,53 @@ if(WIN32)
   list(APPEND sources ${res})
 endif()
 
-add_executable(main WIN32 ${sources})
-target_include_directories(main PRIVATE ${CMAKE_CURRENT_BINARY_DIR} res src)
+add_executable(${PROJECT_NAME} ${sources})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} res src)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_link_libraries(main PRIVATE c++experimental)
+  target_link_libraries(${PROJECT_NAME} PRIVATE c++experimental)
 endif()
 
 if(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(main PRIVATE Threads::Threads)
+  target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 endif()
 
-find_package(unofficial-date REQUIRED)
-target_link_libraries(main PRIVATE unofficial::date::date)
+find_path(JSON_INCLUDE_DIR nlohmann/json.hpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${JSON_INCLUDE_DIR})
+
+find_package(BZip2 1.0.6 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE BZip2::BZip2)
+
+find_package(unofficial-date CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::date::tz unofficial::date::date)
+
+find_package(fmt 4.1.0 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt fmt::fmt-header-only)
+
+find_package(LibLZMA 5.2.3 REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE ${LIBLZMA_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBLZMA_LIBRARIES})
+
+find_package(Libssh2 1.8.0 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Libssh2::libssh2)
+
+find_package(OpenSSL 1.0.2 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+
+find_package(ZLIB 1.2.11 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
 
 find_package(Boost 1.67.0 REQUIRED COMPONENTS system)
-target_link_libraries(main PRIVATE Boost::system)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system)
 
-install(TARGETS main RUNTIME DESTINATION bin)
+include(res/pch.cmake)
+add_precompiled_header(${PROJECT_NAME} common.h SOURCE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/src/common.cpp FORCEINCLUDE)
 
-set_target_properties(main PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT main)
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 if(WIN32 AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/res/tzdata/windowsZones.xml)
   file(DOWNLOAD "https://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml"
